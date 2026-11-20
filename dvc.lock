@@ -1,0 +1,54 @@
+schema: '2.0'
+stages:
+  download:
+    cmd: python src/download.py
+    deps:
+    - path: src/download.py
+      hash: md5
+      md5: 30bced77c1b47a034ab824944a07ca54
+      size: 1132
+    params:
+      params.yaml:
+        data.months:
+        - 2019-11
+        - 2019-12
+        - 2020-01
+        - 2020-02
+        - 2020-03
+        - 2020-04
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: 9a0b9fd619ff832f2efff9b10dc1b69a.dir
+      size: 436500709
+      nfiles: 6
+  prepare:
+    cmd: python src/prepare.py
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 9a0b9fd619ff832f2efff9b10dc1b69a.dir
+      size: 436500709
+      nfiles: 6
+    - path: src/features.py
+      hash: md5
+      md5: 5902995007d2c46793211e558a24f9c5
+      size: 1895
+    - path: src/prepare.py
+      hash: md5
+      md5: 7d648fe2026ecc3f22bb448b6f5c5bf2
+      size: 2177
+    params:
+      params.yaml:
+        data.months:
+        - 2019-11
+        - 2019-12
+        - 2020-01
+        - 2020-02
+        - 2020-03
+        - 2020-04
+    outs:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 70ffe1ee06072950cb73c9677486670a
+      size: 9570090
