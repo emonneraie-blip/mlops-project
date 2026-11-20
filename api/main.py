@@ -26,18 +26,25 @@ state = {"model": None, "version": None}
 
 
 def load_production_model():
-    """Charge la version qui porte l'alias @production. En cas d'échec, l'API reste en 503."""
+    """Charge la version qui porte l'alias @production. Renvoie True si le chargement a réussi.
+    - On charge le numéro de version lu, pas l'alias une deuxième fois : si l'alias bouge entre
+      les deux appels, la version annoncée serait différente du modèle réellement servi.
+    - Si le chargement échoue (MLflow injoignable...), on garde le modèle déjà en place :
+      un reload raté ne doit pas couper une API qui fonctionne. Sans modèle du tout, l'API reste en 503.
+    """
     try:
         mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
         client = MlflowClient()
         version = str(client.get_model_version_by_alias(MODEL_NAME, "production").version)
-        state["model"] = mlflow.pyfunc.load_model("models:/" + MODEL_NAME + "@production")
-        state["version"] = version
-        logger.info(json.dumps({"event": "model_loaded", "version": version}))
+        model = mlflow.pyfunc.load_model("models:/" + MODEL_NAME + "/" + version)
     except Exception as error:
-        state["model"] = None
-        state["version"] = None
-        logger.info(json.dumps({"event": "model_not_loaded", "error": str(error)[:200]}))
+        logger.info(json.dumps({"event": "model_not_loaded", "kept_version": state["version"],
+                                "error": str(error)[:200]}))
+        return False
+    state["model"] = model
+    state["version"] = version
+    logger.info(json.dumps({"event": "model_loaded", "version": version}))
+    return True
 
 
 @asynccontextmanager
@@ -106,5 +113,8 @@ def predict(request: PredictionRequest):
 def reload_model():
     """Appelé après une promotion ou un rollback : recharge la version @production."""
     old_version = state["version"]
-    load_production_model()
+    if not load_production_model():
+        # 503 : l'appelant (promote.py, rollback.py) doit savoir que le changement n'est PAS en ligne
+        raise HTTPException(status_code=503, detail={"error": "reload impossible, l'API garde sa version",
+                                                     "model_version": old_version})
     return {"old_version": old_version, "new_version": state["version"]}

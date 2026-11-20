@@ -60,3 +60,16 @@ def test_503_without_model(registered_model):
         # le reload recharge @production et l'API repart
         assert client.post("/v1/reload").json()["new_version"] == str(registered_model)
         assert client.get("/v1/health").status_code == 200
+
+
+def test_failed_reload_keeps_serving(registered_model, monkeypatch):
+    """MLflow injoignable pendant un reload : l'API garde l'ancien modèle au lieu de tomber en 503."""
+    from api import main
+    with get_client(registered_model) as client:
+        def mlflow_down(*args, **kwargs):
+            raise ConnectionError("MLflow injoignable")
+        monkeypatch.setattr(main.mlflow.pyfunc, "load_model", mlflow_down)
+
+        assert client.post("/v1/reload").status_code == 503  # l'appelant sait que rien n'a changé
+        assert client.get("/v1/health").status_code == 200   # mais l'API sert toujours
+        assert client.post("/v1/predict", json=VALID).json()["model_version"] == str(registered_model)
