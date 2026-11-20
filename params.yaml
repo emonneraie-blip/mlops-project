@@ -1,0 +1,33 @@
+# Tous les réglages du projet. Git versionne ce fichier, DVC suit les paramètres utilisés.
+
+data:
+  # Fichiers mensuels NYC TLC (Yellow Taxi) à télécharger
+  months: ["2019-11", "2019-12", "2020-01", "2020-02", "2020-03", "2020-04"]
+
+split:
+  # Découpage temporel, jamais aléatoire
+  train_start: "2019-11-08"   # la première semaine sert seulement à calculer lag_168
+  train_end: "2020-01-31 23:00"
+  test_start: "2020-02-01"    # golden set : jamais vu à l'entraînement
+  test_end: "2020-02-29 23:00"
+  drift_start: "2020-03-15"   # période de drift : effondrement de la demande (Covid)
+  drift_end: "2020-04-30 23:00"
+
+model:
+  name: "taxi-demand"
+  max_iter: 200
+  learning_rate: 0.1
+  max_depth: 6
+  random_state: 42
+
+drift:
+  n_bins: 10
+  psi_watch: 0.10   # à surveiller
+  psi_act: 0.25     # alerte, on agit
+  max_missing_rate: 0.05
+  silent_zone_min_mean: 5   # une zone à 5 courses/h ou plus qui tombe à 0 course = flux coupé
+
+retrain:
+  cooldown_hours: 24   # pas plus d'un réentraînement par 24 h
+  train_weeks: 3       # fenêtre récente utilisée pour réentraîner
+  golden_days: 7       # derniers jours de la fenêtre, gardés pour le gate

@@ -1,0 +1,26 @@
+# Secrets
+.env
+
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Données : jamais dans Git (DVC les gère)
+/data/raw/
+/data/processed/
+/data/drift/
+
+# MLflow (base et artefacts locaux)
+mlflow_data/
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Sorties de monitoring générées
+monitoring/*.json
+monitoring/*.log
+logs/
+
+.DS_Store

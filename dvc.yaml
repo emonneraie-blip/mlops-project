@@ -1,0 +1,21 @@
+# Pipeline de données. `dvc repro` rejoue seulement les étapes dont une dépendance a changé.
+stages:
+  download:
+    cmd: python src/download.py
+    deps:
+      - src/download.py
+    params:
+      - data.months
+    outs:
+      - data/raw
+
+  prepare:
+    cmd: python src/prepare.py
+    deps:
+      - src/prepare.py
+      - src/features.py
+      - data/raw
+    params:
+      - data.months
+    outs:
+      - data/processed/features.parquet
