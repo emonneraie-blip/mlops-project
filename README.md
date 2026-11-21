@@ -169,5 +169,9 @@ GitHub Actions (`.github/workflows/ci.yml`) sur chaque pull request et push sur 
 | Lucas | À COMPLÉTER PAR LUCAS |
 | Kelsy Nguyen | test depuis un clone neuf (reproductibilité, README), robustesse de l'API au rechargement, tests du rollback, du gate et de la décision drift / qualité de données, business case, résumé, support de présentation |
 
-Résumé en une page : [français](docs/SUMMARY.md) · [English](docs/SUMMARY_EN.md)
-Business case : [français](docs/BUSINESS_CASE.md) · [English](docs/BUSINESS_CASE_EN.md)
+## Documents
+
+- [Business case](docs/BUSINESS_CASE.md) (français)
+- [Résumé métier et technique](docs/SUMMARY_EN_FR.md) (English / français)
+- [Support de présentation](docs/presentation.pdf) (PDF)
+- [Rapport d'incident](incident/INCIDENT_REPORT.md)
