@@ -18,7 +18,7 @@ train:        ## entraîne et enregistre une version @staging
 promote:      ## gate + validation humaine, puis @staging -> @production
 	$(PY) src/promote.py
 
-serve:        ## API sur http://localhost:8000/docs (terminal 2)
+serve:        ## API sur http://localhost:8000/docs (terminal 3)
 	uv run uvicorn api.main:app --port 8000
 
 request:      ## une requête de démo
