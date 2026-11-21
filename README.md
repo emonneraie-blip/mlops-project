@@ -28,7 +28,7 @@ flowchart LR
 | Où | Ce qui est stocké |
 |---|---|
 | Git | code, `params.yaml`, `dvc.yaml`, `dvc.lock`, `uv.lock` — jamais les données ni les secrets |
-| DVC | les octets des données (remote local `../dvc-storage`, S3 en production) |
+| DVC | les octets des données (remote local `../dvc-storage` sur la machine de l'équipe, S3 en production) |
 | MLflow tracking | paramètres, métriques, tags `git_commit`, `git_dirty`, `data_md5` |
 | MLflow Registry | versions du modèle et alias `@staging`, `@production`, `@previous` |
 
@@ -49,7 +49,7 @@ make mlflow
 
 Terminal 2 — données, entraînement, mise en production :
 ```bash
-make data       # uv run dvc repro : télécharge 6 mois TLC (~600 Mo) et construit les features
+make data       # uv run dvc repro : télécharge 6 mois TLC (~440 Mo) et construit les features
 make train      # nouvelle version enregistrée avec l'alias @staging
 make promote    # gate sur le golden set (février 2020), puis validation "o/N"
 ```
@@ -86,9 +86,12 @@ Chaque run MLflow porte `git_commit`, `git_dirty` et `data_md5`. Pour reconstrui
 ```bash
 git checkout <git_commit>
 uv sync --locked
-uv run dvc pull        # ou dvc repro : les données de ce commit, pas celles d'aujourd'hui
+uv run dvc repro       # reconstruit les données de ce commit (retélécharge les fichiers TLC)
+git diff --exit-code dvc.lock   # aucune différence = mêmes octets que ceux du run
 make train             # même MAE à 1e-6 près (random_state fixe, pas d'early stopping aléatoire)
 ```
+`uv run dvc pull` ne marche que sur la machine qui héberge le remote DVC : ici un dossier local (`../dvc-storage`). Depuis un clone neuf, il échoue (`Missing cache files`) ; `dvc repro` reconstruit alors les données depuis la source. Avec un remote partagé (S3 ou MinIO), `dvc pull` suffirait et ne dépendrait plus de la disponibilité des fichiers TLC.
+
 `train.py` avertit si des fichiers ne sont pas commités : un run avec `git_dirty=True` n'est pas reproductible.
 
 ## API
