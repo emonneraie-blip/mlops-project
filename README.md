@@ -159,3 +159,19 @@ GitHub Actions (`.github/workflows/ci.yml`) sur chaque pull request et push sur 
 - Déploiement canary sur Kubernetes, rollback par `kubectl rollout undo`.
 - Remote DVC et artefacts MLflow sur S3 / MinIO au lieu de dossiers locaux.
 - Features météo et jours fériés ; un modèle par groupe de zones.
+
+## Équipe
+
+| Membre | Rôle |
+|---|---|
+| Eliott M. | pipeline de données (DVC), entraînement et suivi MLflow, API, Docker et CI, monitoring du drift, réentraînement, rollback, rapport d'incident |
+| Clément | À COMPLÉTER PAR CLÉMENT |
+| Lucas | À COMPLÉTER PAR LUCAS |
+| Kelsy Nguyen | test depuis un clone neuf (reproductibilité, README), robustesse de l'API au rechargement, tests du rollback, du gate et de la décision drift / qualité de données, business case, résumé, support de présentation |
+
+## Documents
+
+- [Business case](docs/BUSINESS_CASE.md) (français)
+- [Résumé métier et technique](docs/SUMMARY_EN_FR.md) (English / français)
+- [Support de présentation](docs/presentation.pdf) (PDF)
+- [Rapport d'incident](incident/INCIDENT_REPORT.md)
