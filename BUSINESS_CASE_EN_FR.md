@@ -24,7 +24,7 @@ Git versions code, DVC identifies data, and `uv.lock` pins dependencies. MLflow 
 ### Decisions, limits and value
 The system distinguishes real-world drift, which may justify a candidate model, from broken input data, which should stop retraining. A gate compares candidates with the naïve baseline and production model, then requires human approval. A gate only assesses its evaluation window: v2 passed on a Covid-period window but could fail when demand recovered. MAE also changes with demand volume, so scores across regimes are not directly comparable.
 
-This is a local course demonstration, not a measured production deployment. DVC/MLflow storage is local, drift checks are manual, and CI builds but does not start the container. The demonstrated value is operational trust: traceable versions, visible incidents and fast recovery. Cloud storage, scheduled monitoring and measured business outcomes remain future work.
+This is a local course demonstration, not a measured production deployment. DVC/MLflow storage is local, drift checks are manual, and CI builds the image and smoke-tests it at startup but does not push it to a registry. The demonstrated value is operational trust: traceable versions, visible incidents and fast recovery. Cloud storage, scheduled monitoring and measured business outcomes remain future work.
 
 **Jury takeaway:** the project operationalises a forecast; it does not claim that model accuracy alone creates business value.
 
@@ -54,6 +54,6 @@ Git versionne le code, DVC identifie les données et `uv.lock` fixe les dépenda
 ### Arbitrages, limites et valeur
 Le système distingue la dérive du monde réel, qui peut justifier un candidat, des données cassées, qui doivent bloquer le réentraînement. Le gate compare le candidat à la baseline naïve et au modèle en production, puis exige une validation humaine. Il n’évalue que la fenêtre choisie : v2 a passé un contrôle sur une période Covid, mais pouvait échouer lors de la reprise. La MAE varie aussi avec le volume et ne se compare pas directement entre régimes.
 
-Il s’agit d’une démonstration locale de cours, pas d’un déploiement dont l’impact en production est mesuré. Le stockage DVC/MLflow est local, les contrôles de dérive sont manuels et la CI construit l’image sans démarrer le conteneur. La valeur démontrée est la confiance opérationnelle : versions traçables, incidents visibles et retour rapide. Le stockage cloud, la surveillance planifiée et la mesure des résultats métier restent à réaliser.
+Il s’agit d’une démonstration locale de cours, pas d’un déploiement dont l’impact en production est mesuré. Le stockage DVC/MLflow est local, les contrôles de dérive sont manuels et la CI construit l’image et vérifie son démarrage, sans la pousser vers un registre. La valeur démontrée est la confiance opérationnelle : versions traçables, incidents visibles et retour rapide. Le stockage cloud, la surveillance planifiée et la mesure des résultats métier restent à réaliser.
 
 **À retenir pour le jury :** le projet rend une prévision exploitable ; il ne prétend pas que la seule précision du modèle crée de la valeur métier.
