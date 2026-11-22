@@ -9,6 +9,13 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+# MLflow réessaie chaque requête HTTP avec un backoff exponentiel (environ 4 min au total par défaut).
+# Pour l'API, c'est trop long : MLflow injoignable bloquerait le démarrage (et donc le 503 attendu)
+# et chaque /v1/reload pendant plusieurs minutes. On échoue vite ; reste réglable par variable d'environnement.
+os.environ.setdefault("MLFLOW_HTTP_REQUEST_MAX_RETRIES", "2")
+os.environ.setdefault("MLFLOW_HTTP_REQUEST_BACKOFF_FACTOR", "1")
+os.environ.setdefault("MLFLOW_HTTP_REQUEST_TIMEOUT", "10")
+
 import mlflow
 from fastapi import FastAPI, HTTPException
 from mlflow import MlflowClient
