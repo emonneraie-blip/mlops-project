@@ -73,3 +73,25 @@ def test_failed_reload_keeps_serving(registered_model, monkeypatch):
         assert client.post("/v1/reload").status_code == 503  # l'appelant sait que rien n'a changé
         assert client.get("/v1/health").status_code == 200   # mais l'API sert toujours
         assert client.post("/v1/predict", json=VALID).json()["model_version"] == str(registered_model)
+
+
+
+
+
+def test_unreachable_mlflow_fails_fast(registered_model, monkeypatch):
+    """Serveur MLflow éteint : le reload doit répondre 503 en quelques secondes, pas après ~4 min de retries."""
+    import os
+    import time
+
+    from api import main
+    real_uri = os.environ["MLFLOW_TRACKING_URI"]  # set_tracking_uri réécrit aussi la variable d'environnement
+    with get_client(registered_model) as client:
+        monkeypatch.setattr(main, "MLFLOW_TRACKING_URI", "http://127.0.0.1:1")  # port fermé
+        start = time.monotonic()
+        response = client.post("/v1/reload")
+        elapsed = time.monotonic() - start
+        main.mlflow.set_tracking_uri(real_uri)  # rendre le vrai MLflow aux autres tests
+
+        assert response.status_code == 503
+        assert elapsed < 30, f"reload bloqué {elapsed:.0f} s"
+        assert client.get("/v1/health").status_code == 200  # l'ancien modèle sert toujours
