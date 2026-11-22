@@ -41,3 +41,19 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Construire l'image, taguée avec le commit (jamais latest)
         run: docker build -t taxi-demand-api:${{ github.sha }} .
+
+      # Smoke test : l'image démarre vraiment. Sans MLflow, l'API doit répondre 503 (pas de modèle),
+      # pas planter ni rester bloquée. Un conteneur qui crashe au démarrage fait échouer la CI.
+      - name: Smoke test du conteneur (/v1/health doit répondre 503 sans modèle)
+        run: |
+          docker run -d --name api-smoke -p 8000:8000 \
+            -e MLFLOW_TRACKING_URI=http://127.0.0.1:1 \
+            taxi-demand-api:${{ github.sha }}
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/v1/health || true)
+            if [ "$code" = "503" ]; then echo "OK : 503 après ${i} s"; exit 0; fi
+            sleep 1
+          done
+          echo "L'API n'a pas répondu 503 en 60 s (code: $code)"
+          docker logs api-smoke
+          exit 1
