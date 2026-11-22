@@ -1,5 +1,7 @@
 # Business case — prévision de la demande de taxis à New York
 
+*English version: [BUSINESS_CASE_EN.md](BUSINESS_CASE_EN.md)*
+
 Un opérateur de taxis doit savoir, chaque heure, combien de prises en charge chaque zone de New York verra l'heure suivante, pour envoyer les chauffeurs là où seront les clients. Notre modèle divise par deux l'erreur de la règle naïve (MAE de 4,68 contre 9,26 courses par heure sur février 2020). Mais le modèle n'est pas le sujet : ce que nous avons construit, c'est la couche qui le rend fiable en production.
 
 ## Le besoin
