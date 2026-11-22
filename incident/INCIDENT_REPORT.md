@@ -44,7 +44,8 @@ Le modèle v1 est entraîné du 8 novembre 2019 au 31 janvier 2020. Sur le golde
 
 **Réaction** (`make retrain`) :
 - Réentraînement du 3 au 23 avril 2020 ; golden set du 24 au 30 avril 2020.
-- Gate : candidate v2 MAE = 0,589 ; production v1 MAE = [valeur affichée par make retrain] ; la v2 bat la v1 et la baseline.
+- Gate : candidate v2 MAE = 0,589 ; production v1 MAE = 0,688 ; baseline « même heure la veille » MAE = 0,725 : la v2 bat la v1 et la baseline.
+- Rejoué le 22 novembre depuis un clone neuf (autre machine) : v1 réentraînée à l'identique (MAE 4,676 sur février), mêmes PSI, même MAE 0,589 pour la candidate.
 - Validation humaine, puis `@production` → v2 et `@previous` → v1. L'API recharge sans redémarrer.
 
 ## Incident 2 — le modèle réentraîné ne tient pas sur une demande normale
