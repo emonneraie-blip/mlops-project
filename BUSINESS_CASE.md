@@ -41,7 +41,7 @@ Le schéma du système est dans le [README](../README.md#le-système).
 | Features au service | L'appelant envoie les comptages récents ; l'API réutilise `features.py` | Calculer les lags dans l'API | Même code de features des deux côtés : pas d'écart entraînement / service | Pas de feature store : l'appelant doit connaître les comptages récents |
 | Remote des données | Dossier DVC local | S3 / MinIO | Pas d'identifiants cloud à gérer | `dvc pull` échoue depuis un clone neuf ; `dvc repro` retélécharge |
 | Reload raté | L'API garde le modèle en place et répond 503 à l'appelant du reload | Passer en 503 partout | Un reload raté ne doit pas couper un service qui fonctionne | Pendant un rollback avec MLflow injoignable, le modèle fautif sert jusqu'au prochain essai |
-| CI | Tests, puis image taguée avec le SHA du commit ; actions épinglées par SHA ; jeton en lecture seule | Push et déploiement depuis la CI | Chaque changement est testé et constructible | L'image est construite mais ni poussée ni testée au démarrage |
+| CI | Tests, puis image taguée avec le SHA du commit ; actions épinglées par SHA ; jeton en lecture seule | Push et déploiement depuis la CI | Chaque changement est testé et constructible | L'image est construite et testée au démarrage (smoke test), mais pas poussée vers un registre |
 
 ## Les incidents en bref
 
@@ -67,7 +67,7 @@ Trois incidents, trois bonnes réactions différentes : réentraîner quand le m
 | L'appelant envoie les lags | Les clients doivent suivre les comptages récents | Feature store ou agrégation en ligne du flux de courses |
 | Identifiant de zone traité comme un nombre | Les arbres traitent la zone 132 comme « plus grande » que la zone 50 | Zone en variable catégorielle ; un modèle par groupe de zones |
 | `/v1/reload` ouvert à tous | N'importe qui sur le réseau peut déclencher un rechargement | Authentification sur les routes d'administration |
-| La CI construit l'image sans la lancer | Un conteneur qui plante au démarrage n'est pas détecté | Smoke test (`/v1/health` doit répondre 503 sans modèle), push vers un registre |
+| La CI ne pousse l'image vers aucun registre | Pas d'image versionnée prête à déployer | Push vers un registre (GHCR) après les tests |
 | Météo et jours fériés ignorés | Des facteurs connus de la demande manquent | Features météo et jours fériés |
 
 ## Sources
