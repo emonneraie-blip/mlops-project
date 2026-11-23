@@ -197,4 +197,7 @@ GitHub Actions (`.github/workflows/ci.yml`) sur chaque pull request et push sur 
 - Business case : [français](docs/BUSINESS_CASE.md) · [English](docs/BUSINESS_CASE_EN.md)
 - [Résumé métier et technique](docs/SUMMARY_EN_FR.md) (English / français)
 - [Support de présentation](docs/presentation.pdf) (PDF)
+- [Script de présentation](docs/presentation_script.docx) : qui dit quoi, 1,5 min par personne, démo seulement si le jury la demande
 - [Rapport d'incident](incident/INCIDENT_REPORT.md)
+- [Runbook](docs/runbook.md) : qui fait quoi quand une alerte part
+- [Démo enregistrée](demo/mlops_demo_group1_v1.mp4) : les 9 étapes de `scripts/demo.sh` (2 min 22), à montrer si le jury demande une démo
