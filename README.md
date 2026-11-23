@@ -104,6 +104,7 @@ make train             # même MAE à 1e-6 près (random_state fixe, pas d'early
 | `POST /v1/reload` | recharge la version `@production` (après promotion ou rollback) |
 
 Le contrat est strict (Pydantic, `extra="forbid"`) : un champ inconnu, une valeur négative ou une zone hors 1–265 renvoie 422. Chaque prédiction est loggée en JSON avec un `request_id` et la version du modèle, sans donnée personnelle.
+Chaque requête (y compris les 422 et 503) est aussi loggée avec son code HTTP et sa latence (`"event": "request"`, en-tête `X-Process-Time-Ms`) : c'est le signal « 5xx en hausse » du rollback et la base d'une latence P95.
 
 ## Monitoring du drift
 

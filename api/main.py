@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import sys
+import time
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -17,7 +18,7 @@ os.environ.setdefault("MLFLOW_HTTP_REQUEST_BACKOFF_FACTOR", "1")
 os.environ.setdefault("MLFLOW_HTTP_REQUEST_TIMEOUT", "10")
 
 import mlflow
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from mlflow import MlflowClient
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -61,6 +62,23 @@ async def lifespan(app):
 
 
 app = FastAPI(title="NYC Taxi Demand API", version="1.0.0", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Couche API du monitoring : une ligne JSON par requête, avec le code HTTP et la latence.
+    C'est le signal du rollback « erreurs 5xx en hausse » (README) et de la latence P95."""
+    started = time.perf_counter()
+    status = 500  # une exception non gérée dans la route finit en 500 : on la compte aussi
+    try:
+        response = await call_next(request)
+        status = response.status_code
+        response.headers["X-Process-Time-Ms"] = str(round((time.perf_counter() - started) * 1000, 1))
+        return response
+    finally:
+        latency_ms = round((time.perf_counter() - started) * 1000, 1)
+        logger.info(json.dumps({"event": "request", "method": request.method, "path": request.url.path,
+                                "status": status, "latency_ms": latency_ms, "model_version": state["version"]}))
 
 
 class PredictionRequest(BaseModel):

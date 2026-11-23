@@ -95,3 +95,20 @@ def test_unreachable_mlflow_fails_fast(registered_model, monkeypatch):
         assert response.status_code == 503
         assert elapsed < 30, f"reload bloqué {elapsed:.0f} s"
         assert client.get("/v1/health").status_code == 200  # l'ancien modèle sert toujours
+
+
+def test_every_request_is_logged_with_status_and_latency(registered_model, caplog):
+    """Couche API du monitoring : code HTTP et latence de chaque requête, y compris les refus (422)."""
+    import json
+    import logging
+
+    with get_client(registered_model) as client:
+        with caplog.at_level(logging.INFO, logger="taxi-api"):
+            ok = client.post("/v1/predict", json=VALID)
+            refused = client.post("/v1/predict", json={"pu_location_id": 999})
+
+    assert float(ok.headers["X-Process-Time-Ms"]) >= 0
+    events = [json.loads(r.getMessage()) for r in caplog.records if r.getMessage().startswith("{")]
+    requests_logged = [e for e in events if e["event"] == "request"]
+    assert [e["status"] for e in requests_logged] == [200, 422]
+    assert all(e["latency_ms"] >= 0 and e["path"] == "/v1/predict" for e in requests_logged)
