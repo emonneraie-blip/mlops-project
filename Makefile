@@ -24,6 +24,10 @@ serve:        ## API sur http://localhost:8000/docs (terminal 3)
 request:      ## une requête de démo
 	curl -s -X POST http://localhost:8000/v1/predict -H "Content-Type: application/json" -d '{"pu_location_id": 132, "pickup_hour": "2020-02-20T18:00:00", "lag_1": 85, "lag_2": 90, "lag_24": 80, "lag_168": 78}'
 
+.PHONY: load-test
+load-test:    ## latence P50/P95/P99 et débit de l'API, budget P95 200 ms (API lancée)
+	$(PY) src/load_test.py --users 1 4 16 --seconds 15
+
 test:
 	uv run pytest -q
 

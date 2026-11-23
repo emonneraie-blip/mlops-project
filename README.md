@@ -105,6 +105,10 @@ make train             # même MAE à 1e-6 près (random_state fixe, pas d'early
 
 Le contrat est strict (Pydantic, `extra="forbid"`) : un champ inconnu, une valeur négative ou une zone hors 1–265 renvoie 422. Chaque prédiction est loggée en JSON avec un `request_id` et la version du modèle, sans donnée personnelle.
 
+### Latence sous charge
+
+`make load-test` (API lancée, modèle en `@production`) envoie des requêtes sans pause avec 1, 4 puis 16 utilisateurs simultanés, et affiche P50, P95, P99, débit et erreurs. Le budget est celui de la séance 3 : P95 ≤ 200 ms. On retient le débit le plus haut qui tient ce budget sans erreur, pas le débit maximal atteint. Code de sortie 1 si aucun niveau ne tient.
+
 ## Monitoring du drift
 
 `src/drift.py` compare une fenêtre récente à la période d'entraînement du modèle en production (lue dans MLflow : après un réentraînement, la référence suit).
