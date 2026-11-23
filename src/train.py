@@ -37,6 +37,24 @@ def file_md5(path):
     return md5.hexdigest()
 
 
+def fit_and_evaluate(df, train_start, train_end, test_start, test_end, model_params):
+    """Entraînement + évaluation, sans MLflow. Utilisé par train_model ET par repro_check.py :
+    le même code produit le modèle et le vérifie."""
+    train = select_period(df, train_start, train_end)
+    test = select_period(df, test_start, test_end)
+    model = HistGradientBoostingRegressor(
+        max_iter=model_params["max_iter"],
+        learning_rate=model_params["learning_rate"],
+        max_depth=model_params["max_depth"],
+        random_state=model_params["random_state"],
+        early_stopping=False,
+    )
+    model.fit(to_model_input(train), train[TARGET])
+    metrics = evaluate(model, test)
+    metrics["baseline_mae_lag24"] = naive_mae(test)
+    return model, metrics, train, test
+
+
 def train_model(train_start, train_end, test_start, test_end, data_file=PROCESSED_FILE, reason="initial"):
     params = load_params()
     model_params = params["model"]
@@ -47,21 +65,8 @@ def train_model(train_start, train_end, test_start, test_end, data_file=PROCESSE
         print("ATTENTION : des fichiers ne sont pas commités, le run ne sera pas reproductible (git_dirty=True)")
 
     df = pd.read_parquet(data_file)
-    train = select_period(df, train_start, train_end)
-    test = select_period(df, test_start, test_end)
+    model, metrics, train, test = fit_and_evaluate(df, train_start, train_end, test_start, test_end, model_params)
     print("Train :", len(train), "lignes | Test :", len(test), "lignes")
-
-    model = HistGradientBoostingRegressor(
-        max_iter=model_params["max_iter"],
-        learning_rate=model_params["learning_rate"],
-        max_depth=model_params["max_depth"],
-        random_state=model_params["random_state"],
-        early_stopping=False,
-    )
-    model.fit(to_model_input(train), train[TARGET])
-
-    metrics = evaluate(model, test)
-    metrics["baseline_mae_lag24"] = naive_mae(test)
 
     mlflow.set_experiment("taxi-demand")
     with mlflow.start_run(run_name="train-" + reason):
