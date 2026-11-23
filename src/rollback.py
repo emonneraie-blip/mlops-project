@@ -26,8 +26,9 @@ def rollback(target=None, reason="manual"):
     if production is not None:
         client.set_registered_model_alias(MODEL_NAME, "previous", production)
     print("ROLLBACK : @production v" + str(production), "-> v" + target)
-    log_event("rollback", {"from_version": production, "to_version": target, "reason": reason})
-    notify_api()
+    api_reloaded = notify_api()
+    log_event("rollback", {"from_version": production, "to_version": target, "reason": reason,
+                           "api_reloaded": api_reloaded})
     print("Durée :", round(time.time() - started, 1), "s")
     return True
 

@@ -54,9 +54,18 @@ def log_event(action, details):
 
 
 def notify_api():
-    """Demande à l'API de recharger le modèle @production. Sans API lancée, on le signale."""
+    """Demande à l'API de recharger le modèle @production.
+    Renvoie True seulement si l'API sert la nouvelle version. Un 503 de /v1/reload veut dire
+    que l'API n'a PAS rechargé et sert toujours l'ancienne version : il ne faut pas l'afficher comme un succès.
+    """
     try:
         response = requests.post(API_URL + "/v1/reload", timeout=30)
-        print("API rechargée :", response.json())
-    except Exception:
+    except requests.RequestException:
         print("API non joignable : relancez-la ou appelez POST /v1/reload")
+        return False
+    if response.status_code != 200:
+        print("ATTENTION : l'API n'a PAS rechargé (HTTP " + str(response.status_code) + ") :", response.text[:200])
+        print("Elle sert toujours l'ancienne version. Relancez POST /v1/reload quand MLflow répond.")
+        return False
+    print("API rechargée :", response.json())
+    return True

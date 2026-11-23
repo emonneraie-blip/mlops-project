@@ -51,8 +51,9 @@ def promote(version, start, end, yes=False, data_file=PROCESSED_FILE):
         client.set_registered_model_alias(MODEL_NAME, "previous", production)
     client.set_registered_model_alias(MODEL_NAME, "production", version)
     print("@production -> v" + version, "| @previous -> v" + str(production))
-    log_event("promote", {"from_version": production, "to_version": version, "candidate_mae": candidate_mae})
-    notify_api()
+    api_reloaded = notify_api()
+    log_event("promote", {"from_version": production, "to_version": version, "candidate_mae": candidate_mae,
+                          "api_reloaded": api_reloaded})
     return True
 
 
