@@ -94,13 +94,14 @@ def check_drift(current, reference, params, model=None):
         report["current_mae"] = evaluate(model, current)["mae"]
         report["reference_mae"] = evaluate(model, reference)["mae"]
 
-    # 3. Zones devenues muettes : une zone active dans la référence ne remonte plus aucune course
+    # 3. Zones devenues muettes : une zone active dans la référence ne remonte plus aucune course.
+    # Une zone absente de la fenêtre (plus aucune ligne) est muette aussi : total = 0.
     ref_mean = reference.groupby("pu_location_id")["pickups"].mean()
     cur_total = current.groupby("pu_location_id")["pickups"].sum()
     for zone in ref_mean.index:
         if ref_mean[zone] < params["drift"]["silent_zone_min_mean"]:
             continue
-        if zone in cur_total.index and cur_total[zone] == 0:
+        if cur_total.get(zone, 0) == 0:
             report["silent_zones"].append(int(zone))
     if len(report["silent_zones"]) > 0:
         report["reasons"].append({"kind": "data_quality",
