@@ -133,6 +133,7 @@ make rollback          # @production revient sur @previous, l'API recharge
 - Quand : erreur 5xx en hausse, alerte qualité de données sur des données qui ont servi au dernier réentraînement, ou MAE de la nouvelle version au-dessus de l'ancienne quand les labels arrivent.
 - Qui : la personne d'astreinte, sans attendre de validation (revenir en arrière ne fait jamais pire que la dernière version validée).
 - Cible précise : `uv run python src/rollback.py --version 3`.
+- La version retirée reçoit le tag `rolled_back` (avec la raison, visible dans l'UI MLflow). Un deuxième `make rollback` refuse d'y revenir : sinon la version fautive repartirait en production sans gate. Pour la remettre, il faut la nommer (`--version`) ou la repasser par `make promote`.
 
 ## Incidents simulés
 

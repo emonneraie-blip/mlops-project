@@ -50,6 +50,8 @@ def promote(version, start, end, yes=False, data_file=PROCESSED_FILE):
     if production is not None:
         client.set_registered_model_alias(MODEL_NAME, "previous", production)
     client.set_registered_model_alias(MODEL_NAME, "production", version)
+    if "rolled_back" in client.get_model_version(MODEL_NAME, version).tags:
+        client.delete_model_version_tag(MODEL_NAME, version, "rolled_back")  # repassée par le gate
     print("@production -> v" + version, "| @previous -> v" + str(production))
     api_reloaded = notify_api()
     log_event("promote", {"from_version": production, "to_version": version, "candidate_mae": candidate_mae,
