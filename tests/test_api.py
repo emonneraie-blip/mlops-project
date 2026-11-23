@@ -112,3 +112,12 @@ def test_every_request_is_logged_with_status_and_latency(registered_model, caplo
     requests_logged = [e for e in events if e["event"] == "request"]
     assert [e["status"] for e in requests_logged] == [200, 422]
     assert all(e["latency_ms"] >= 0 and e["path"] == "/v1/predict" for e in requests_logged)
+
+
+def test_one_openmp_thread_per_prediction():
+    """Sans réglage, les threads OpenMP des prédictions simultanées se disputent les cœurs (cf. make load-test)."""
+    import os
+
+    import api.main  # noqa: F401  le réglage est fait à l'import, avant numpy et scikit-learn
+
+    assert os.environ["OMP_NUM_THREADS"] == "1"
