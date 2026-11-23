@@ -47,3 +47,26 @@ def test_gate_refuses_a_candidate_worse_than_the_baseline(registered_model, feat
 
     assert promote_module.promote(candidate, start, end, yes=True, data_file=data_file) is False
     assert registry.get_alias_version(client, "production") == production_before  # rien n'a bougé
+
+
+def test_second_rollback_does_not_bring_back_the_faulty_version(registered_model, monkeypatch):
+    """make rollback deux fois de suite : la 2e fois, @previous est la version qu'on vient de retirer.
+    On refuse d'y revenir sans la nommer, sinon la version fautive repart en production sans gate."""
+    monkeypatch.setattr(rollback_module, "notify_api", lambda: True)
+    client = MlflowClient()
+    old = str(registered_model)
+    new = register_copy(registered_model)
+    client.set_registered_model_alias(MODEL, "previous", old)
+    client.set_registered_model_alias(MODEL, "production", new)
+
+    assert rollback_module.rollback(reason="v2 sous-estime") is True
+    assert client.get_model_version(MODEL, new).tags["rolled_back"] == "v2 sous-estime"
+
+    assert rollback_module.rollback() is False  # 2e rollback : refusé
+    assert registry.get_alias_version(client, "production") == old
+
+    assert rollback_module.rollback(target=new) is True  # choix explicite : permis, le tag est retiré
+    assert registry.get_alias_version(client, "production") == new
+    assert "rolled_back" not in client.get_model_version(MODEL, new).tags
+
+    client.set_registered_model_alias(MODEL, "production", old)  # remet l'état attendu par les autres tests

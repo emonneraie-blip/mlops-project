@@ -118,6 +118,7 @@ Code de sortie 1 si une ligne échoue : la vérification peut tourner en CI.
 | `POST /v1/reload` | recharge la version `@production` (après promotion ou rollback) |
 
 Le contrat est strict (Pydantic, `extra="forbid"`) : un champ inconnu, une valeur négative ou une zone hors 1–265 renvoie 422. Chaque prédiction est loggée en JSON avec un `request_id` et la version du modèle, sans donnée personnelle.
+Chaque requête (y compris les 422 et 503) est aussi loggée avec son code HTTP et sa latence (`"event": "request"`, en-tête `X-Process-Time-Ms`) : c'est le signal « 5xx en hausse » du rollback et la base d'une latence P95.
 
 ### Latence sous charge
 
@@ -153,6 +154,7 @@ make rollback          # @production revient sur @previous, l'API recharge
 - Quand : erreur 5xx en hausse, alerte qualité de données sur des données qui ont servi au dernier réentraînement, ou MAE de la nouvelle version au-dessus de l'ancienne quand les labels arrivent.
 - Qui : la personne d'astreinte nommée dans le [runbook](docs/runbook.md), sans attendre de validation (revenir en arrière ne fait jamais pire que la dernière version validée).
 - Cible précise : `uv run python src/rollback.py --version 3`.
+- La version retirée reçoit le tag `rolled_back` (avec la raison, visible dans l'UI MLflow). Un deuxième `make rollback` refuse d'y revenir : sinon la version fautive repartirait en production sans gate. Pour la remettre, il faut la nommer (`--version`) ou la repasser par `make promote`.
 
 ## Incidents simulés
 
