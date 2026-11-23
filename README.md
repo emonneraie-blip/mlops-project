@@ -124,6 +124,16 @@ Chaque requête (y compris les 422 et 503) est aussi loggée avec son code HTTP 
 
 `make load-test` (API lancée, modèle en `@production`) envoie des requêtes sans pause avec 1, 4 puis 16 utilisateurs simultanés, et affiche P50, P95, P99, débit et erreurs. Le budget est celui de la séance 3 : P95 ≤ 200 ms. On retient le débit le plus haut qui tient ce budget sans erreur, pas le débit maximal atteint. Code de sortie 1 si aucun niveau ne tient.
 
+Mesuré le 23 novembre sur un MacBook (client et API sur la même machine, un seul worker uvicorn, modèle v1) :
+
+| Utilisateurs | sans réglage : req/s | P95 | `OMP_NUM_THREADS=1` : req/s | P95 |
+|---|---|---|---|---|
+| 1 | 158,7 | 11,3 ms | 433,9 | 2,5 ms |
+| 4 | 69,1 | 60,3 ms | 395,5 | 13,5 ms |
+| 16 | 63,1 | 288,8 ms (hors budget) | 359,1 | 66,8 ms |
+
+Sans réglage, le débit baissait quand la charge montait : chaque prédiction scikit-learn lance un thread OpenMP par cœur, et les prédictions simultanées se disputent les cœurs. Les logs `"event": "request"` de l'API donnaient la même latence que le client : le temps était passé dans la prédiction, pas dans le réseau. L'API fixe donc `OMP_NUM_THREADS=1` par défaut (`api/main.py`) : un thread par prédiction, le parallélisme vient des requêtes. Zéro erreur sur les 22 000 requêtes.
+
 ## Monitoring du drift
 
 `src/drift.py` compare une fenêtre récente à la période d'entraînement du modèle en production (lue dans MLflow : après un réentraînement, la référence suit).

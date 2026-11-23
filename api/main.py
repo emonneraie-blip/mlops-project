@@ -17,6 +17,12 @@ os.environ.setdefault("MLFLOW_HTTP_REQUEST_MAX_RETRIES", "2")
 os.environ.setdefault("MLFLOW_HTTP_REQUEST_BACKOFF_FACTOR", "1")
 os.environ.setdefault("MLFLOW_HTTP_REQUEST_TIMEOUT", "10")
 
+# Par défaut, chaque prédiction scikit-learn lance un thread OpenMP par cœur. Avec plusieurs requêtes
+# en parallèle (FastAPI les sert dans un pool de threads), ces threads se disputent les cœurs et le débit
+# BAISSE quand la charge monte (make load-test : 159 -> 63 req/s de 1 à 16 utilisateurs, P95 289 ms).
+# Un thread par prédiction, le parallélisme vient des requêtes : 359 req/s et P95 67 ms à 16 utilisateurs. À fixer avant l'import de numpy et scikit-learn.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+
 import mlflow
 from fastapi import FastAPI, HTTPException, Request
 from mlflow import MlflowClient
