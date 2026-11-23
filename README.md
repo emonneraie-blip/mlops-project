@@ -105,13 +105,17 @@ make train             # même MAE à 1e-6 près (random_state fixe, pas d'early
 
 Le contrat est strict (Pydantic, `extra="forbid"`) : un champ inconnu, une valeur négative ou une zone hors 1–265 renvoie 422. Chaque prédiction est loggée en JSON avec un `request_id` et la version du modèle, sans donnée personnelle.
 
+### Latence sous charge
+
+`make load-test` (API lancée, modèle en `@production`) envoie des requêtes sans pause avec 1, 4 puis 16 utilisateurs simultanés, et affiche P50, P95, P99, débit et erreurs. Le budget est celui de la séance 3 : P95 ≤ 200 ms. On retient le débit le plus haut qui tient ce budget sans erreur, pas le débit maximal atteint. Code de sortie 1 si aucun niveau ne tient.
+
 ## Monitoring du drift
 
 `src/drift.py` compare une fenêtre récente à la période d'entraînement du modèle en production (lue dans MLflow : après un réentraînement, la référence suit).
 
 - PSI sur les entrées (`lag_1`, `lag_24`), sur `avg_distance` / `avg_fare` et sur les prédictions : 0,10 à surveiller, 0,25 pour agir. La statistique KS est affichée à côté : sur des centaines de milliers de lignes, la p-value est toujours minuscule, on lit la taille de l'écart.
 - Qualité des données : valeurs manquantes, médiane hors plage plausible, zone active devenue muette.
-- Le PSI n'est pas calculé sur la cible : les labels arrivent en retard. La MAE est affichée quand ils sont disponibles.
+- Le PSI n'est pas calculé sur la cible : la cible se juge avec la MAE. Ici les labels arrivent une heure après la prévision (le nombre réel de courses), donc la MAE de la fenêtre, affichée par `drift.py`, est disponible presque aussi vite que le PSI. Elle ne se compare pas d'un régime à l'autre : elle baisse quand le volume baisse (incident 1).
 
 Chaque contrôle écrit `monitoring/drift_report.json`, logge les PSI dans l'expérience MLflow `taxi-demand-monitoring`, et ajoute l'alerte dans `monitoring/events.log`.
 
@@ -126,12 +130,14 @@ Chaque contrôle écrit `monitoring/drift_report.json`, logge les PSI dans l'exp
 
 ## Rollback
 
+Que faire pour chaque alerte, et qui décide : [docs/runbook.md](docs/runbook.md).
+
 ```bash
 make rollback          # @production revient sur @previous, l'API recharge
 ```
 - Une commande, moins de 5 minutes (environ 1 seconde mesurée). Aucun modèle n'est supprimé : la version fautive devient `@previous` et reste inspectable.
 - Quand : erreur 5xx en hausse, alerte qualité de données sur des données qui ont servi au dernier réentraînement, ou MAE de la nouvelle version au-dessus de l'ancienne quand les labels arrivent.
-- Qui : la personne d'astreinte, sans attendre de validation (revenir en arrière ne fait jamais pire que la dernière version validée).
+- Qui : la personne d'astreinte nommée dans le [runbook](docs/runbook.md), sans attendre de validation (revenir en arrière ne fait jamais pire que la dernière version validée).
 - Cible précise : `uv run python src/rollback.py --version 3`.
 
 ## Incidents simulés
