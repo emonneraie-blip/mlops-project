@@ -88,8 +88,22 @@ git checkout <git_commit>
 uv sync --locked
 uv run dvc repro       # reconstruit les données de ce commit (retélécharge les fichiers TLC)
 git diff --exit-code dvc.lock   # aucune différence = mêmes octets que ceux du run
-make train             # même MAE à 1e-6 près (random_state fixe, pas d'early stopping aléatoire)
+make repro-check RUN=<run_id>   # vérifie commit, data_md5 et métriques à 1e-6 près
 ```
+`src/repro_check.py` réentraîne avec les paramètres et les fenêtres enregistrés dans le run (pas ceux de `params.yaml`), sans créer de run ni de version, et compare (sortie attendue) :
+
+```
+PASS code     (git_commit <commit>)
+PASS code     (aucun fichier modifié)
+PASS données  (data_md5)
+PASS modèle   test_mae           écart = 0.0e+00
+PASS modèle   test_rmse          écart = 0.0e+00
+PASS modèle   baseline_mae_lag24 écart = 0.0e+00
+
+REPRODUIT
+```
+Code de sortie 1 si une ligne échoue : la vérification peut tourner en CI.
+
 `uv run dvc pull` ne marche que sur la machine qui héberge le remote DVC : ici un dossier local (`../dvc-storage`). Depuis un clone neuf, il échoue (`Missing cache files`) ; `dvc repro` reconstruit alors les données depuis la source. Avec un remote partagé (S3 ou MinIO), `dvc pull` suffirait et ne dépendrait plus de la disponibilité des fichiers TLC.
 
 `train.py` avertit si des fichiers ne sont pas commités : un run avec `git_dirty=True` n'est pas reproductible.

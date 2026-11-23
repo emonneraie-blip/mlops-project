@@ -1,7 +1,7 @@
 # Raccourcis. Sans make (Windows), copier la commande de la ligne du dessous.
 PY = uv run python
 
-.PHONY: setup mlflow data train promote serve request test drift drift-ok inject-zone inject-fare retrain rollback events up
+.PHONY: setup mlflow data train promote serve request test repro-check drift drift-ok inject-zone inject-fare retrain rollback events up
 
 setup:        ## installe l'environnement figé par uv.lock
 	uv sync --locked
@@ -30,6 +30,9 @@ load-test:    ## latence P50/P95/P99 et débit de l'API, budget P95 200 ms (API 
 
 test:
 	uv run pytest -q
+
+repro-check:  ## rejoue un run et compare à 1e-6 : make repro-check RUN=<run_id>
+	$(PY) src/repro_check.py $(RUN)
 
 drift-ok:     ## contrôle sur février 2020 : pas de drift attendu
 	$(PY) src/drift.py --start 2020-02-01 --end "2020-02-29 23:00"
