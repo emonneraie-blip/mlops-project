@@ -16,6 +16,10 @@ from mlflow.models import infer_signature  # noqa: E402
 from sklearn.ensemble import HistGradientBoostingRegressor  # noqa: E402
 
 from features import TARGET, build_features, to_model_input  # noqa: E402
+import registry  # noqa: E402
+
+# Les tests ne doivent pas écrire dans le vrai journal monitoring/events.log (celui de la démo)
+registry.MONITORING_DIR = os.path.join(TMP_DIR, "monitoring")
 
 
 def make_hourly(n_days=21, zones=(1, 2, 132), seed=0):

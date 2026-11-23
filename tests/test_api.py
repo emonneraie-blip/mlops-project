@@ -105,7 +105,7 @@ def test_every_request_is_logged_with_status_and_latency(registered_model, caplo
     with get_client(registered_model) as client:
         with caplog.at_level(logging.INFO, logger="taxi-api"):
             ok = client.post("/v1/predict", json=VALID)
-            refused = client.post("/v1/predict", json={"pu_location_id": 999})
+            assert client.post("/v1/predict", json={"pu_location_id": 999}).status_code == 422
 
     assert float(ok.headers["X-Process-Time-Ms"]) >= 0
     events = [json.loads(r.getMessage()) for r in caplog.records if r.getMessage().startswith("{")]
